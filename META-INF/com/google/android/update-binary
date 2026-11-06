@@ -1,0 +1,21 @@
+#!/sbin/sh
+#################
+# Magisk/KernelSU Module Installer Script
+#################
+OUTFD=$2
+ZIPFILE=$3
+
+# Extract module id
+MODID=$(unzip -p "$ZIPFILE" module.prop | grep "^id=" | head -n1 | cut -d= -f2 | tr -d '\r')
+[ -z "$MODID" ] && MODID="mi10t_optimizer"
+MODPATH="/data/adb/modules/$MODID"
+
+rm -rf "$MODPATH"
+mkdir -p "$MODPATH"
+unzip -o "$ZIPFILE" -x "META-INF/*" -d "$MODPATH" >&2
+
+chmod 755 "$MODPATH/service.sh" 2>/dev/null
+chmod 755 "$MODPATH/action.sh" 2>/dev/null
+chmod 755 "$MODPATH/optimizer.sh" 2>/dev/null
+chmod 755 "$MODPATH/system/bin/mi-opt" 2>/dev/null
+exit 0

@@ -1,0 +1,2 @@
+#!/system/bin/sh
+sh /data/adb/modules/mi10t_optimizer/action.sh

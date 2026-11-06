@@ -1,0 +1,6 @@
+id=mi10t_optimizer
+name=Mi 10T Pro Optimizer
+version=1.0.0
+versionCode=100
+author=Antigravity
+description=Tự động quét & tối ưu Bloatware, Kernel, I/O UFS 3.1, TCP BBR và Smart DEX Compile cho Mi 10T Pro (apollo).

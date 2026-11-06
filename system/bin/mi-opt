@@ -1,2 +1,6 @@
 #!/system/bin/sh
-sh /data/adb/modules/mi10t_optimizer/action.sh
+if [ -d /data/adb/modules/xiaomi_optimizer ]; then
+    sh /data/adb/modules/xiaomi_optimizer/action.sh
+elif [ -d /data/adb/modules/mi10t_optimizer ]; then
+    sh /data/adb/modules/mi10t_optimizer/action.sh
+fi

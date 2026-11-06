@@ -51,28 +51,27 @@ Mô-đun tương thích hoàn hảo với **KernelSU**, **Magisk** và **APatch*
 miuiopti/
 ├── META-INF/
 │   └── com/google/android/
-│       ├── update-binary            # Script cài đặt flashable
+│       ├── update-binary            # Script cài đặt flashable (tự gỡ bản cũ mi10t_optimizer)
 │       └── updater-script           # Khai báo định dạng cài đặt
 ├── system/
 │   └── bin/
 │       └── mi-opt                   # Lệnh chạy nhanh trong Terminal / Termux
 ├── action.sh                        # Script giao diện nút Action (kèm giữ màn hình 10s)
-├── module.prop                      # Khai báo thông tin mô-đun
+├── module.prop                      # Khai báo thông tin mô-đun (id=xiaomi_optimizer)
 ├── optimizer.sh                     # Logic tối ưu cốt lõi
 ├── service.sh                       # Kịch bản khởi chạy tự động sau khi boot
 ├── Xiaomi_Optimizer_v1.1.zip        # File zip flashable phiên bản v1.1.0
-├── Mi10T_Pro_Optimizer_v1.0.zip     # File zip tương thích
 └── README.md
 ```
 
 ---
 
-## 🛠️ Hướng dẫn cài đặt / Flash lại
+## 🛠️ Hướng dẫn cài đặt / Flash
 
 1. Tải về file [`Xiaomi_Optimizer_v1.1.zip`](./Xiaomi_Optimizer_v1.1.zip) (hoặc lấy tại thư mục `/sdcard/Download/Xiaomi_Optimizer_v1.1.zip` trên điện thoại).
 2. Mở ứng dụng **KernelSU** / **Magisk** / **APatch**.
 3. Vào tab **Mô-đun** (*Modules*) > Chọn **Cài đặt từ bộ nhớ** (*Install from storage*).
-4. Chọn file zip vừa tải và flash đè lên bản cũ.
+4. Chọn file `Xiaomi_Optimizer_v1.1.zip` để flash. Bộ cài đặt sẽ tự động dọn sạch bản cũ `mi10t_optimizer`.
 5. Khởi động lại máy.
 
 ---
@@ -80,7 +79,7 @@ miuiopti/
 ## 🧪 Cách kích hoạt & kiểm tra thủ công
 
 ### 1. Dùng nút Action
-* Mở KernelSU / APatch > Tab **Mô-đun** > Bấm **Action** bên cạnh mô-đun.
+* Mở KernelSU / APatch > Tab **Mô-đun** > Bấm **Action** bên cạnh mô-đun **Xiaomi HyperOS & MIUI Optimizer**.
 * Màn hình sẽ hiển thị kết quả và **giữ lại trong 10 giây** để bạn dễ dàng theo dõi.
 
 ### 2. Dùng dòng lệnh Termux

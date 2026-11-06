@@ -1,14 +1,17 @@
 #!/sbin/sh
 #################
-# Magisk/KernelSU Module Installer Script
+# Magisk/KernelSU/APatch Module Installer Script
 #################
 OUTFD=$2
 ZIPFILE=$3
 
 # Extract module id
 MODID=$(unzip -p "$ZIPFILE" module.prop | grep "^id=" | head -n1 | cut -d= -f2 | tr -d '\r')
-[ -z "$MODID" ] && MODID="mi10t_optimizer"
+[ -z "$MODID" ] && MODID="xiaomi_optimizer"
 MODPATH="/data/adb/modules/$MODID"
+
+# Clean up legacy module if exists
+rm -rf /data/adb/modules/mi10t_optimizer
 
 rm -rf "$MODPATH"
 mkdir -p "$MODPATH"

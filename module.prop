@@ -1,6 +1,6 @@
 id=mi10t_optimizer
-name=Mi 10T Pro Optimizer
-version=1.0.0
-versionCode=100
+name=Xiaomi HyperOS & MIUI Optimizer
+version=1.1.0
+versionCode=110
 author=Antigravity
-description=Tự động quét & tối ưu Bloatware, Kernel, I/O UFS 3.1, TCP BBR và Smart DEX Compile cho Mi 10T Pro (apollo).
+description=Tự động nhận diện thiết bị (Mi 10T Pro, K30 5G,...), tối ưu Bloatware, Kernel, I/O Scheduler noop, UFS buffer 512KB, TCP Fast Open/BBR, Swappiness và Smart DEX.

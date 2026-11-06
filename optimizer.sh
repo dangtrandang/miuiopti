@@ -3,6 +3,11 @@ MODDIR="${0%/*}"
 LOGFILE="$MODDIR/optimizer.log"
 APP_RECORD="$MODDIR/optimized_apps.txt"
 
+DEVICE_MODEL=$(getprop ro.product.model)
+DEVICE_CODENAME=$(getprop ro.product.device)
+[ -z "$DEVICE_MODEL" ] && DEVICE_MODEL="Xiaomi Device"
+[ -z "$DEVICE_CODENAME" ] && DEVICE_CODENAME="Generic"
+
 log() {
     local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
     echo "$msg" >> "$LOGFILE"
@@ -39,17 +44,34 @@ com.xiaomi.joyose
 }
 
 apply_kernel() {
-    log "--> Đang tối ưu Kernel & UFS..."
+    log "--> Đang tối ưu Kernel, I/O UFS & RAM..."
+
+    # 1. TCP Congestion & TCP Fast Open
     if grep -q "bbr" /proc/sys/net/ipv4/tcp_available_congestion_control 2>/dev/null; then
         echo bbr > /proc/sys/net/ipv4/tcp_congestion_control
         log "  [OK] TCP Congestion: bbr"
     fi
+    if [ -f /proc/sys/net/ipv4/tcp_fastopen ]; then
+        echo 3 > /proc/sys/net/ipv4/tcp_fastopen
+        log "  [OK] TCP Fast Open: 3 (client + server)"
+    fi
 
+    # 2. VFS Cache Pressure & Swappiness
     if [ -f /proc/sys/vm/vfs_cache_pressure ]; then
         echo 80 > /proc/sys/vm/vfs_cache_pressure
         log "  [OK] VFS Cache Pressure: 80"
     fi
+    if [ -f /proc/sys/vm/swappiness ]; then
+        echo 60 > /proc/sys/vm/swappiness
+        log "  [OK] Swappiness: 60 (giảm áp lực ZRAM, giữ app mượt)"
+    fi
 
+    # 3. Disable background tracing (traced, traced_probes)
+    setprop persist.traced.enable 0
+    stop traced 2>/dev/null
+    stop traced_probes 2>/dev/null
+
+    # 4. UFS tuning: read_ahead_kb, scheduler noop, etc.
     local ufs_count=0
     for b in /sys/block/sd*/queue/read_ahead_kb; do
         if [ -f "$b" ]; then
@@ -57,6 +79,19 @@ apply_kernel() {
             ufs_count=$((ufs_count + 1))
         fi
     done
+
+    # Switch I/O scheduler to noop for flash storage
+    local sched_changed=0
+    for s in /sys/block/sd*/queue/scheduler; do
+        if [ -f "$s" ] && grep -q "noop" "$s"; then
+            echo noop > "$s"
+            sched_changed=1
+        fi
+    done
+    if [ "$sched_changed" -eq 1 ]; then
+        log "  [OK] I/O Scheduler: noop (tối ưu chip flash UFS)"
+    fi
+
     for b in /sys/block/sd*/queue/rq_affinity; do
         [ -f "$b" ] && echo 2 > "$b"
     done
@@ -66,7 +101,7 @@ apply_kernel() {
     for b in /sys/block/sd*/queue/iostats; do
         [ -f "$b" ] && echo 0 > "$b"
     done
-    log "  [OK] UFS 3.1: Đã tăng bộ đệm 512KB trên $ufs_count phân vùng."
+    log "  [OK] UFS Storage: Đã tăng bộ đệm 512KB trên $ufs_count phân vùng."
 }
 
 smart_dexopt() {
@@ -94,7 +129,7 @@ smart_dexopt() {
 
 case "$1" in
     boot)
-        echo "=== BẮT ĐẦU TỰ ĐỘNG NẠP LÚC KHỞI ĐỘNG ===" >> "$LOGFILE"
+        echo "=== BẮT ĐẦU TỰ ĐỘNG NẠP LÚC KHỞI ĐỘNG ($DEVICE_MODEL - $DEVICE_CODENAME) ===" >> "$LOGFILE"
         scan_debloat
         apply_kernel
         if [ ! -f "$APP_RECORD" ]; then

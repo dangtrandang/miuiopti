@@ -1,6 +1,6 @@
 id=xiaomi_optimizer
 name=Xiaomi HyperOS & MIUI Optimizer
-version=1.1.0
-versionCode=110
+version=1.2.0
+versionCode=120
 author=Antigravity
-description=Tự động nhận diện thiết bị (Xiaomi, Redmi, POCO), tối ưu Bloatware, Kernel, I/O Scheduler noop, UFS buffer 512KB, TCP Fast Open/BBR, Swappiness và Smart DEX.
+description=Tự động nhận diện thiết bị (Xiaomi, Redmi, POCO), tối ưu Bloatware, Kernel, I/O Scheduler noop, UFS buffer 512KB, TCP Fast Open, Swappiness và Smart DEX (chạy nền thông minh).

@@ -2,6 +2,7 @@
 MODDIR="${0%/*}"
 LOGFILE="$MODDIR/optimizer.log"
 APP_RECORD="$MODDIR/optimized_apps.txt"
+LOCKFILE="$MODDIR/.dex_lock"
 
 DEVICE_MODEL=$(getprop ro.product.model)
 DEVICE_CODENAME=$(getprop ro.product.device)
@@ -109,21 +110,44 @@ smart_dexopt() {
     [ ! -f "$APP_RECORD" ] && touch "$APP_RECORD"
 
     local user_apps=$(pm list packages -3 | sed 's/^package://')
+    local pending_apps=""
     local new_count=0
 
     for app in $user_apps; do
         if ! grep -q "^$app$" "$APP_RECORD" 2>/dev/null; then
-            log "  [Biên dịch] $app..."
-            cmd package compile -m speed-profile "$app" >/dev/null 2>&1
-            echo "$app" >> "$APP_RECORD"
+            pending_apps="$pending_apps $app"
             new_count=$((new_count + 1))
         fi
     done
 
-    if [ "$new_count" -gt 0 ]; then
+    if [ "$new_count" -eq 0 ]; then
+        log "  [OK] Tất cả ứng dụng đã được tối ưu từ trước."
+    elif [ "$new_count" -le 2 ]; then
+        # 1-2 app mới: Biên dịch trực tiếp trong giao diện (rất nhanh, 5-10s)
+        for app in $pending_apps; do
+            log "  [Biên dịch] $app..."
+            cmd package compile -m speed-profile "$app" >/dev/null 2>&1
+            echo "$app" >> "$APP_RECORD"
+        done
         log "  [OK] Đã biên dịch xong $new_count ứng dụng mới."
     else
-        log "  [OK] Tất cả ứng dụng đã được tối ưu từ trước."
+        # Khi có nhiều hơn 2 app (lần đầu flash hoặc phục hồi nhiều app):
+        # Đẩy chạy ngầm bằng nohup để Action phản hồi tức thì trong 1 giây, không treo giao diện
+        if [ -f "$LOCKFILE" ] && kill -0 "$(cat "$LOCKFILE" 2>/dev/null)" 2>/dev/null; then
+            log "  [Đang chạy] Quá trình biên dịch nền trước đó vẫn đang tiến hành."
+        else
+            log "  [Phát hiện] $new_count ứng dụng cần tối ưu."
+            log "  [Chạy ngầm] Đang tối ưu trong nền (không làm đơ máy, có thể tắt cửa sổ)."
+            nohup sh -c '
+                echo $$ > "'"$LOCKFILE"'"
+                for a in '"$pending_apps"'; do
+                    cmd package compile -m speed-profile "$a" >/dev/null 2>&1
+                    echo "$a" >> "'"$APP_RECORD"'"
+                done
+                rm -f "'"$LOCKFILE"'"
+                echo "[$(date "+%Y-%m-%d %H:%M:%S")] [Hoàn tất] Đã biên dịch ngầm xong '"$new_count"' ứng dụng." >> "'"$LOGFILE"'"
+            ' >/dev/null 2>&1 &
+        fi
     fi
 }
 
@@ -132,8 +156,9 @@ case "$1" in
         echo "=== BẮT ĐẦU TỰ ĐỘNG NẠP LÚC KHỞI ĐỘNG ($DEVICE_MODEL - $DEVICE_CODENAME) ===" >> "$LOGFILE"
         scan_debloat
         apply_kernel
-        if [ ! -f "$APP_RECORD" ]; then
-            pm list packages -3 | sed 's/^package://' > "$APP_RECORD"
+        if [ ! -f "$APP_RECORD" ] || [ ! -s "$APP_RECORD" ]; then
+            local pkgs=$(pm list packages -3 | sed 's/^package://')
+            [ -n "$pkgs" ] && echo "$pkgs" > "$APP_RECORD"
         fi
         log "=== NẠP THÀNH CÔNG (Tự động thoát, không tốn tài nguyên) ==="
         ;;
